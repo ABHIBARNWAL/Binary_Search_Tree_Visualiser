@@ -1,35 +1,32 @@
-const defaultBSTUIConfig = {
-    HIGHLIGHT_CLASS: 'node__element--highlight',
-    HIGHLIGHT_TIME: 300,
-  };
-  
-  class BinarySearchTreeUI {
-    highlightTimer = null;
-    actionsContainerSelector;
-    constructor(
-      tree,
-      render,
-      treeContainerSelector = '.tree',
-      actionsContainerSelector = '.bst-actions-container',
-      config = {
-        HIGHLIGHT_CLASS: 'node__element--highlight',
-        HIGHLIGHT_TIME: 300,
-      }
-    ) {
-      this.treeContainerSelector = treeContainerSelector;
-      this.actionsContainerSelector = actionsContainerSelector;
-      this.config = config;
-      this.tree = tree;
-      this.render = render || this.renderTree;
-      const root = document.documentElement;
-      root.style.setProperty(
-        '--animation-timing',
-        `${this.config.HIGHLIGHT_TIME / 1000}s`
-      );
+class BinarySearchTreeUI {
+  highlightTimer = null;
+  actionsContainerSelector;
+  treeContainerSelector;
+  config;
+  constructor(
+    tree,
+    render,
+    treeContainerSelector = ".tree",
+    actionsContainerSelector = ".bst-actions-container",
+    config = {
+      HIGHLIGHT_CLASS: "node__element--highlight",
+      HIGHLIGHT_TIME: 300,
     }
-  
-    template() {
-      return `
+  ) {
+    this.treeContainerSelector = treeContainerSelector;
+    this.actionsContainerSelector = actionsContainerSelector;
+    this.config = config;
+    this.tree = tree;
+    this.render = this.renderTree;
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--animation-timing",
+      `${this.config.HIGHLIGHT_TIME / 1000}s`
+    );
+  }
+
+  template() {
+    return `
       <div class="btn-group">
         <button id="insertBtn" class="btn btn-warning">
           Insert Node
@@ -62,20 +59,20 @@ const defaultBSTUIConfig = {
         </button>
       </div>
       `;
+  }
+
+  traverseUINodes(nodes) {
+    nodes.reduce((pr, node) => {
+      return pr.then(() => this.highlightNode(node));
+    },Promise.resolve());
+  }
+
+  getTreeUI(node) {
+    const { left, right, value } = node;
+    if (!node) {
+      return "";
     }
-  
-    traverseUINodes(nodes) {
-      nodes.reduce((pr, node) => {
-        return pr.then(() => this.highlightNode(node));
-      }, Promise.resolve());
-    }
-  
-    getTreeUI(node) {
-      const { left, right, value } = node;
-      if (!node) {
-        return '';
-      }
-      return `
+    return `
         <div class="node__element" data-node-id="${value}">${value}</div>
         ${
           left || right
@@ -83,373 +80,357 @@ const defaultBSTUIConfig = {
               <div class="node_bottom_line"></div>
               <div class="node__children">
               <div class="node node--left">
-                ${left ? this.getTreeUI(left) : ''}
+                ${left ? this.getTreeUI(left) : ""}
               </div>
               <div class="node node--right">
-                ${right ? this.getTreeUI(right) : ''}
+                ${right ? this.getTreeUI(right) : ""}
               </div>
               </div>
             `
-            : ''
+            : ""
         }
       `;
+  }
+
+  renderTree(
+    node = this.tree.root,
+    containerSelector = this.treeContainerSelector
+  ) {
+    const treeContainer = document.querySelector(containerSelector);
+    if (!node) {
+      return (treeContainer.innerHTML = "");
     }
-  
-    renderTree(
-      node = this.tree.root,
-      containerSelector = this.treeContainerSelector
-    ) {
-      const treeContainer = document.querySelector(containerSelector);
-      if (!node) {
-        return (treeContainer.innerHTML = '');
-      }
-      const template = this.getTreeUI(node);
-      treeContainer.innerHTML = template;
-    }
-  
-    highlightNode({ value }) {
-      const nodeElement = document.querySelector(`[data-node-id="${value}"]`);
-      if (this.highlightTimer !== null) {
-        clearTimeout(this.highlightTimer);
+    const template = this.getTreeUI(node);
+    treeContainer.innerHTML = template;
+  }
+
+  highlightNode({ value }) {
+    const nodeElement = document.querySelector(`[data-node-id="${value}"]`);
+    nodeElement.classList.add(this.config.HIGHLIGHT_CLASS);
+    document.querySelectorAll("button").forEach((btn) => {
+      btn.setAttribute("disabled", true);
+    });
+    return new Promise((resolve) => {
+      this.highlightTimer = setTimeout(() => {
         nodeElement.classList.remove(this.config.HIGHLIGHT_CLASS);
-        this.highlightTimer = null;
-        return;
-      }
-      nodeElement.classList.add(this.config.HIGHLIGHT_CLASS);
-      document.querySelectorAll('button').forEach((btn) => {
-        btn.setAttribute('disabled', true);
-      });
-      return new Promise((resolve) => {
-        this.highlightTimer = setTimeout(() => {
-          nodeElement.classList.remove(this.config.HIGHLIGHT_CLASS);
-          document.querySelectorAll('button').forEach((btn) => {
-            btn.removeAttribute('disabled');
-          });
-          this.highlightTimer = null;
-          resolve();
-        }, this.config.HIGHLIGHT_TIME);
-      });
-    }
-  
-    onRemoveElementBtnClick() {
-      const element = prompt('Enter element to remove from the tree');
-      const removedEl = this.tree.remove(element);
-      if (removedEl) {
-        this.highlightNode(removedEl).then(() => {
-          this.render(this.tree.root);
+        document.querySelectorAll("button").forEach((btn) => {
+          btn.removeAttribute("disabled");
         });
-      } else {
-        alert('Element not found');
-      }
-    }
-  
-    setTemplate() {
-      const actionsContainer = document.querySelector(
-        this.actionsContainerSelector
-      );
-      actionsContainer.innerHTML = this.template();
-    }
-  
-    onInsertBtnClick() {
-      const element = prompt('Enter element to add to tree');
-      if (!element) {
-        return;
-      }
-      const node = this.tree.insert(element);
-      this.render(this.tree.root);
-      this.highlightNode(node);
-    }
-  
-    onMinValueBtnClick() {
-      const node = this.tree.min();
-      if (node) {
-        this.highlightNode(node);
-      } else {
-        alert('Node not found');
-      }
-    }
-  
-    onSearchBtnClick() {
-      const searchVal = prompt('Enter the node value to search in the tree');
-      const searchedNode = this.tree.search(searchVal);
-      if (searchedNode) {
-        this.highlightNode(searchedNode);
-      } else {
-        alert('Node not found');
-      }
-    }
-  
-    onMaxValueBtnClick() {
-      const node = this.tree.max();
-      if (node) {
-        this.highlightNode(node);
-      } else {
-        alert('Node not found');
-      }
-    }
-  
-    onPreOrderTravBtnClick() {
-      const array = this.tree.preOrderTraverse();
-      this.traverseUINodes(array);
-      console.log(array);
-    }
-  
-    onInOrderTravBtnClick() {
-      const array = this.tree.inOrderTraverse();
-      this.traverseUINodes(array);
-      console.log(array);
-    }
-  
-    onPostOrderTravBtnClick() {
-      const array = this.tree.postOrderTraverse();
-      this.traverseUINodes(array);
-      console.log(array);
-    }
-  
-    onResetBtnClick() {
-      this.highlightNode(this.tree.root).then(() => {
-        this.tree.root = null;
+        this.highlightTimer = null;
+        resolve();
+      }, this.config.HIGHLIGHT_TIME);
+    });
+  }
+
+  onRemoveElementBtnClick() {
+    const element = prompt("Enter element to remove from the tree");
+    const removedEl = this.tree.remove(element);
+    if (removedEl) {
+      this.highlightNode(removedEl).then(() => {
         this.render(this.tree.root);
       });
+    } else {
+      alert("Element not found");
     }
-  
-    init() {
-      this.setTemplate();
-      const insert = document.querySelector('#insertBtn');
-      const removeElementBtn = document.querySelector('#removeElementBtn');
-      const minValueBtn = document.querySelector('#minValueBtn');
-      const maxValueBtn = document.querySelector('#maxValueBtn');
-      const searchBtn = document.querySelector('#searchBtn');
-      const preOrderTravBtn = document.querySelector('#preOrderTravBtn');
-      const inOrderTravBtn = document.querySelector('#inOrderTravBtn');
-      const postOrderTravBtn = document.querySelector('#postOrderTravBtn');
-      const resetBtn = document.querySelector('#resetBtn');
-      removeElementBtn.addEventListener(
-        'click',
-        this.onRemoveElementBtnClick.bind(this)
-      );
-      insert.addEventListener('click', this.onInsertBtnClick.bind(this));
-      minValueBtn.addEventListener('click', this.onMinValueBtnClick.bind(this));
-      searchBtn.addEventListener('click', this.onSearchBtnClick.bind(this));
-      maxValueBtn.addEventListener('click', this.onMaxValueBtnClick.bind(this));
-      preOrderTravBtn.addEventListener(
-        'click',
-        this.onPreOrderTravBtnClick.bind(this)
-      );
-      inOrderTravBtn.addEventListener(
-        'click',
-        this.onInOrderTravBtnClick.bind(this)
-      );
-      postOrderTravBtn.addEventListener(
-        'click',
-        this.onPostOrderTravBtnClick.bind(this)
-      );
-      resetBtn.addEventListener('click', this.onResetBtnClick.bind(this));
+  }
+
+  setTemplate() {
+    const actionsContainer = document.querySelector(
+      this.actionsContainerSelector
+    );
+    actionsContainer.innerHTML = this.template();
+  }
+
+  onInsertBtnClick() {
+    const element = prompt("Enter element to add to tree");
+    if (!element) {
+      return;
     }
+    const node = this.tree.insert(element);
+    this.render(this.tree.root);
+    this.highlightNode(node);
+  }
+
+  onMinValueBtnClick() {
+    const node = this.tree.min();
+    if (node) {
+      this.highlightNode(node);
+    } else {
+      alert("Node not found");
+    }
+  }
+
+  onSearchBtnClick() {
+    const searchVal = prompt("Enter the node value to search in the tree");
+    const searchedNode = this.tree.search(searchVal);
+    if (searchedNode) {
+      this.highlightNode(searchedNode);
+    } else {
+      alert("Node not found");
+    }
+  }
+
+  onMaxValueBtnClick() {
+    const node = this.tree.max();
+    if (node) {
+      this.highlightNode(node);
+    } else {
+      alert("Node not found");
+    }
+  }
+
+  onPreOrderTravBtnClick() {
+    const array = this.tree.preOrderTraverse();
+    this.traverseUINodes(array);
+    console.log(array);
+  }
+
+  onInOrderTravBtnClick() {
+    const array = this.tree.inOrderTraverse();
+    this.traverseUINodes(array);
+    console.log(array);
+  }
+
+  onPostOrderTravBtnClick() {
+    const array = this.tree.postOrderTraverse();
+    this.traverseUINodes(array);
+    console.log(array);
+  }
+
+  onResetBtnClick() {
+    this.highlightNode(this.tree.root).then(() => {
+      this.tree.root = null;
+      this.render(this.tree.root);
+    });
+  }
+
+  init() {
+    this.setTemplate();
+    const insert = document.querySelector("#insertBtn");
+    const removeElementBtn = document.querySelector("#removeElementBtn");
+    const minValueBtn = document.querySelector("#minValueBtn");
+    const maxValueBtn = document.querySelector("#maxValueBtn");
+    const searchBtn = document.querySelector("#searchBtn");
+    const preOrderTravBtn = document.querySelector("#preOrderTravBtn");
+    const inOrderTravBtn = document.querySelector("#inOrderTravBtn");
+    const postOrderTravBtn = document.querySelector("#postOrderTravBtn");
+    const resetBtn = document.querySelector("#resetBtn");
+    removeElementBtn.addEventListener(
+      "click",
+      this.onRemoveElementBtnClick.bind(this)
+    );
+    insert.addEventListener("click", this.onInsertBtnClick.bind(this));
+    minValueBtn.addEventListener("click", this.onMinValueBtnClick.bind(this));
+    searchBtn.addEventListener("click", this.onSearchBtnClick.bind(this));
+    maxValueBtn.addEventListener("click", this.onMaxValueBtnClick.bind(this));
+    preOrderTravBtn.addEventListener(
+      "click",
+      this.onPreOrderTravBtnClick.bind(this)
+    );
+    inOrderTravBtn.addEventListener(
+      "click",
+      this.onInOrderTravBtnClick.bind(this)
+    );
+    postOrderTravBtn.addEventListener(
+      "click",
+      this.onPostOrderTravBtnClick.bind(this)
+    );
+    resetBtn.addEventListener("click", this.onResetBtnClick.bind(this));
+  }
 }
 const COMPARISON = {
-    EQUAL: 0,
-    SMALLER: -1,
-    GREATER: 1,
-  };
-  
-  const defaultCompareNumberFn = (a, b) => {
-    if (Number(a) == Number(b)) {
-      return COMPARISON.EQUAL;
+  EQUAL: 0,
+  SMALLER: -1,
+  GREATER: 1,
+};
+
+const defaultCompareNumberFn = (a, b) => {
+  if (Number(a) == Number(b)) {
+    return COMPARISON.EQUAL;
+  }
+
+  return Number(a) < Number(b) ? COMPARISON.SMALLER : COMPARISON.GREATER;
+};
+
+class TreeNode {
+  constructor(value, parent) {
+    this.value = value.toString();
+    this.parent = parent || null;
+    this.left = null;
+    this.right = null;
+  }
+
+  get isLeaf() {
+    return this.left === null && this.right === null;
+  }
+
+  get hasChildren() {
+    return !this.isLeaf;
+  }
+}
+class BinarySearchTree {
+  root;
+  compareFn;
+  constructor(compareFn = defaultCompareNumberFn) {
+    this.root = null;
+    this.compareFn = compareFn;
+  }
+
+  insert(value) {
+    let node = this.root;
+    let insertedNode;
+    if (node === null) {
+      this.root = new TreeNode(value);
+      return this.root;
     }
-  
-    return Number(a) < Number(b) ? COMPARISON.SMALLER : COMPARISON.GREATER;
-  };
-  
-  class TreeNode {
-    constructor(value, parent) {
-      this.value = value.toString();
-      this.parent = parent || null;
-      this.left = null;
-      this.right = null;
-    }
-  
-    get isLeaf() {
-      return this.left === null && this.right === null;
-    }
-  
-    get hasChildren() {
-      return !this.isLeaf;
+    const nodeInserted = (() => {
+      while (true) {
+        const comparison = this.compareFn(value, node.value);
+        if (comparison === COMPARISON.EQUAL) {
+          insertedNode = node;
+          return node;
+        }
+        if (comparison === COMPARISON.SMALLER) {
+          if (node.left === null) {
+            insertedNode = new TreeNode(value, node);
+            node.left = insertedNode;
+            return true;
+          }
+          node = node.left;
+        } else if (comparison === COMPARISON.GREATER) {
+          if (node.right === null) {
+            insertedNode = new TreeNode(value, node);
+            node.right = insertedNode;
+            return true;
+          }
+          node = node.right;
+        }
+      }
+    })();
+    if (nodeInserted) {
+      return insertedNode;
     }
   }
-  class BinarySearchTree {
-    root;
-    compareFn;
-    constructor(compareFn = defaultCompareNumberFn) {
-      this.root = null;
-      this.compareFn = compareFn;
-    }
-  
-    insert(value) {
-      let node = this.root;
-      let insertedNode;
-      if (node === null) {
-        this.root = new TreeNode(value);
-        return this.root;
-      }
-      const nodeInserted = (() => {
-        while (true) {
-          const comparison = this.compareFn(value, node.value);
-          if (comparison === COMPARISON.EQUAL) {
-            insertedNode = node;
-            return node;
-          }
-          if (comparison === COMPARISON.SMALLER) {
-            if (node.left === null) {
-              insertedNode = new TreeNode(value, node);
-              node.left = insertedNode;
-              return true;
-            }
-            node = node.left;
-          } else if (comparison === COMPARISON.GREATER) {
-            if (node.right === null) {
-              insertedNode = new TreeNode(value, node);
-              node.right = insertedNode;
-              return true;
-            }
-            node = node.right;
-          }
-        }
-      })();
-      if (nodeInserted) {
-        return insertedNode;
-      }
-    }
-  
-    remove(value, node) {
-      node = node ? node : this.search(value);
-      if (!node) return null;
-  
-      const nodeIsRoot = node.parent === null;
-      const hasBothChildren = node.left !== null && node.right !== null;
-      const isLeftChild = !nodeIsRoot ? node.parent.left === node : false;
-  
-      if (node.isLeaf) {
-        if (nodeIsRoot) {
-          this.root = null;
-        } else if (isLeftChild) {
-          node.parent.left = null;
-        } else {
-          node.parent.right = null;
-        }
-        return node;
-      }
-      if (!hasBothChildren) {
-        const child = node.left !== null ? node.left : node.right;
-        if (nodeIsRoot) {
-          this.root = child;
-        } else if (isLeftChild) {
-          node.parent.left = child;
-        } else {
-          node.parent.right = child;
-        }
-        child.parent = node.parent;
-        return node;
-      }
-  
-      const minRightLeaf = this.min(node.right);
-      if (minRightLeaf.parent.left === minRightLeaf) {
-        minRightLeaf.parent.left = null;
+
+  remove(value, node) {
+    node = node ? node : this.search(value);
+    if (!node) return null;
+
+    const nodeIsRoot = node.parent === null;
+    const hasBothChildren = node.left !== null && node.right !== null;
+    const isLeftChild = !nodeIsRoot ? node.parent.left === node : false;
+
+    if (node.isLeaf) {
+      if (nodeIsRoot) {
+        this.root = null;
+      } else if (isLeftChild) {
+        node.parent.left = null;
       } else {
-        minRightLeaf.parent.right = null;
+        node.parent.right = null;
       }
-      const clone = { ...node };
-      node.value = minRightLeaf.value;
-      return clone;
+      return node;
     }
-    search(value) {
-      return this.postOrderTraverse().find((node) => node.value === value);
+    if (!hasBothChildren) {
+      const child = node.left !== null ? node.left : node.right;
+      if (nodeIsRoot) {
+        this.root = child;
+      } else if (isLeftChild) {
+        node.parent.left = child;
+      } else {
+        node.parent.right = child;
+      }
+      child.parent = node.parent;
+      return node;
     }
-    min(node = this.root) {
-      let current = node;
-      while (current !== null && current.left !== null) {
-        current = current.left;
-      }
-      return current;
+
+    const minRightLeaf = this.min(node.right);
+    if (minRightLeaf.parent.left === minRightLeaf) {
+      minRightLeaf.parent.left = null;
+    } else {
+      minRightLeaf.parent.right = null;
     }
-    max(node = this.root) {
-      let current = node;
-      while (current !== null && current.right !== null) {
-        current = current.right;
-      }
-      return current;
+    const clone = { ...node };
+    node.value = minRightLeaf.value;
+    return clone;
+  }
+  search(value) {
+    return this.postOrderTraverse().find((node) => node.value === value);
+  }
+  min(node = this.root) {
+    let current = node;
+    while (current !== null && current.left !== null) {
+      current = current.left;
     }
-    inOrderTraverse(node = this.root, traversed = []) {
-      if (node === null) {
-        return traversed;
-      }
-      if (node.left) {
-        traversed.push(...this.inOrderTraverse(node.left));
-      }
-      traversed.push(node);
-      if (node.right) {
-        traversed.push(...this.inOrderTraverse(node.right));
-      }
+    return current;
+  }
+  max(node = this.root) {
+    let current = node;
+    while (current !== null && current.right !== null) {
+      current = current.right;
+    }
+    return current;
+  }
+  inOrderTraverse(node = this.root, traversed = []) {
+    if (node === null) {
       return traversed;
     }
-    preOrderTraverse(node = this.root, traversed = []) {
-      if (node === null) {
-        return traversed;
-      }
-      traversed.push(node);
-      if (node.left) {
-        traversed.push(...this.preOrderTraverse(node.left));
-      }
-      if (node.right) {
-        traversed.push(...this.preOrderTraverse(node.right));
-      }
+    if (node.left) {
+      traversed.push(...this.inOrderTraverse(node.left));
+    }
+    traversed.push(node);
+    if (node.right) {
+      traversed.push(...this.inOrderTraverse(node.right));
+    }
+    return traversed;
+  }
+  preOrderTraverse(node = this.root, traversed = []) {
+    if (node === null) {
       return traversed;
     }
-    postOrderTraverse(node = this.root, traversed = []) {
-      if (node === null) {
-        return traversed;
-      }
-      if (node.left) {
-        traversed.push(...this.postOrderTraverse(node.left));
-      }
-      if (node.right) {
-        traversed.push(...this.postOrderTraverse(node.right));
-      }
-      traversed.push(node);
+    traversed.push(node);
+    if (node.left) {
+      traversed.push(...this.preOrderTraverse(node.left));
+    }
+    if (node.right) {
+      traversed.push(...this.preOrderTraverse(node.right));
+    }
+    return traversed;
+  }
+  postOrderTraverse(node = this.root, traversed = []) {
+    if (node === null) {
       return traversed;
     }
+    if (node.left) {
+      traversed.push(...this.postOrderTraverse(node.left));
+    }
+    if (node.right) {
+      traversed.push(...this.postOrderTraverse(node.right));
+    }
+    traversed.push(node);
+    return traversed;
+  }
 }
 function createSampleTreeData(tree) {
-    tree.insert(11);
-    tree.insert(7);
-    tree.insert(5);
-    tree.insert(3);
-    tree.insert(6);
-    tree.insert(9);
-    tree.insert(8);
-    tree.insert(10);
-    tree.insert(15);
-    console.log(tree.insert(13));
-    tree.insert(12);
-    tree.insert(14);
-    tree.insert(20);
-    tree.insert(18);
-    tree.insert(25);
-    console.log('inOrderTraverse');
-    console.log(tree.inOrderTraverse());
-    console.log('preOrderTraverse');
-    console.log(tree.preOrderTraverse());
-    console.log('postOrderTraverse');
-    console.log(tree.postOrderTraverse());
-    console.log('min', tree.min());
-    console.log('max', tree.max());
-    console.log(tree.search(12));
-  }
+  tree.insert(11);
+  tree.insert(7);
+  tree.insert(5);
+  tree.insert(3);
+  tree.insert(6);
+  tree.insert(9);
+  tree.insert(8);
+  tree.insert(10);
+  tree.insert(15);
+  tree.insert(12);
+  tree.insert(14);
+  tree.insert(20);
+  tree.insert(18);
+  tree.insert(25);
+}
 const main = () => {
   const myTree = new BinarySearchTree();
   createSampleTreeData(myTree);
-  console.log('treeData', myTree);
-  const bstUI = new BinarySearchTreeUI(myTree, null, '.tree');
+  console.log("treeData", myTree);
+  const bstUI = new BinarySearchTreeUI(myTree, null, ".tree");
   bstUI.init();
   bstUI.render();
 };
