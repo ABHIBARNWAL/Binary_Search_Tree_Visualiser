@@ -1,3 +1,35 @@
+.form{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.form-area{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin: 10px 0px 0px 0px;
+  box-shadow: 10px 0px 15px 15px rgba(1,1,1,0.1);
+  width:400px;
+  border-radius: 16px;
+}
+.form-area input{
+  flex:1;
+  width: 100%;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 16px;
+  background: #dcdcdc;
+}
+.error{
+  margin-top: 5px;
+  display: none;
+}
+.error h1{
+  font-size: 20px;
+  color: #ed460a;
+}
 .tree {
   --dark: #333;
   margin-top: 30px;
@@ -40,7 +72,7 @@
   cursor: pointer;
   border: 1px solid transparent;
   height: 40px;
-  background-color: rgb(188, 117, 246);
+  background-color: rgb(51, 211, 51);
   border-radius: 16px;
   min-width: 60px;
   max-width: max-content;
@@ -54,7 +86,7 @@
 .tree .node_bottom_line {
   height: 20px;
   width: 1px;
-  background-color: #dcdcdc;
+  background-color: rgb(238, 237, 237);
 }
 
 .tree .node__element,

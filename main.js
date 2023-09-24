@@ -1,3 +1,7 @@
+const txt=document.getElementById('node-value');
+txt.addEventListener('input',()=>{
+  document.querySelector('.error').style.display="none";
+})
 class BinarySearchTreeUI {
   highlightTimer = null;
   actionsContainerSelector;
@@ -123,15 +127,19 @@ class BinarySearchTreeUI {
   }
 
   onRemoveElementBtnClick() {
-    const element = prompt("Enter element to remove from the tree");
-    const removedEl = this.tree.remove(element);
-    if (removedEl) {
-      this.highlightNode(removedEl).then(() => {
-        this.render(this.tree.root);
-      });
-    } else {
-      alert("Element not found");
-    }
+    document.querySelector('.error').style.display="none";
+    const element = document.getElementById('node-value').value;
+      const removedEl = this.tree.remove(element);
+      if (removedEl) {
+        this.highlightNode(removedEl).then(() => {
+          
+          this.render(this.tree.root);
+        });
+      } 
+      else {
+        document.querySelector('.error h1').innerHTML="Node not found";
+        document.querySelector('.error').style.display="block";
+      }
   }
 
   setTemplate() {
@@ -142,7 +150,7 @@ class BinarySearchTreeUI {
   }
 
   onInsertBtnClick() {
-    const element = prompt("Enter element to add to tree");
+    const element = document.getElementById('node-value').value;
     if (!element) {
       return;
     }
@@ -152,30 +160,36 @@ class BinarySearchTreeUI {
   }
 
   onMinValueBtnClick() {
+    document.querySelector('.error').style.display="none";
     const node = this.tree.min();
     if (node) {
       this.highlightNode(node);
     } else {
-      alert("Node not found");
+      document.querySelector('.error h1').innerHTML="Node not found";
+        document.querySelector('.error').style.display="block";
     }
   }
 
   onSearchBtnClick() {
-    const searchVal = prompt("Enter the node value to search in the tree");
+    document.querySelector('.error').style.display="none";
+    const searchVal = document.getElementById('node-value').value;
     const searchedNode = this.tree.search(searchVal);
     if (searchedNode) {
       this.highlightNode(searchedNode);
     } else {
-      alert("Node not found");
+      document.querySelector('.error h1').innerHTML="Node not found";
+        document.querySelector('.error').style.display="block";
     }
   }
 
   onMaxValueBtnClick() {
+    document.querySelector('.error').style.display="none";
     const node = this.tree.max();
     if (node) {
       this.highlightNode(node);
     } else {
-      alert("Node not found");
+      document.querySelector('.error h1').innerHTML="Node not found";
+        document.querySelector('.error').style.display="block";
     }
   }
 
@@ -238,6 +252,7 @@ class BinarySearchTreeUI {
     resetBtn.addEventListener("click", this.onResetBtnClick.bind(this));
   }
 }
+ 
 const COMPARISON = {
   EQUAL: 0,
   SMALLER: -1,
@@ -354,7 +369,7 @@ class BinarySearchTree {
     return clone;
   }
   search(value) {
-    return this.postOrderTraverse().find((node) => node.value === value);
+    return this.preOrderTraverse().find((node) => node.value === value);
   }
   min(node = this.root) {
     let current = node;
@@ -410,26 +425,9 @@ class BinarySearchTree {
     return traversed;
   }
 }
-function createSampleTreeData(tree) {
-  tree.insert(11);
-  tree.insert(7);
-  tree.insert(5);
-  tree.insert(3);
-  tree.insert(6);
-  tree.insert(9);
-  tree.insert(8);
-  tree.insert(10);
-  tree.insert(15);
-  tree.insert(12);
-  tree.insert(14);
-  tree.insert(20);
-  tree.insert(18);
-  tree.insert(25);
-}
 const main = () => {
   const myTree = new BinarySearchTree();
-  createSampleTreeData(myTree);
-  console.log("treeData", myTree);
+  // console.log("treeData", myTree);
   const bstUI = new BinarySearchTreeUI(myTree, null, ".tree");
   bstUI.init();
   bstUI.render();
